@@ -1,4 +1,4 @@
-![[pictures/discogopher.png]]
+![discogopher](pictures/discogopher.png)
 
 # meet discogopher
 a multi purpose discord bot written in Golang

@@ -1,4 +1,4 @@
-![discogopher](pictures/discogopher.png | width=25)
+<img src="pictures/discogopher.png" width="20%">
 
 # meet discogopher
 a multi purpose discord bot written in Golang

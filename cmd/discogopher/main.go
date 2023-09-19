@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/Zwnow/discogopher/pkg/commands"
+	c "github.com/Zwnow/discogopher/internal/commands"
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 )
@@ -28,11 +28,28 @@ func main() {
 		log.Fatal("Error while starting discord session.")
 	}
 
-	d.AddHandler(commands.PingPong)
+	d.AddHandler(c.PingPong)
 
-	d.Identify.Intents = discordgo.IntentsGuildMessages
+	// Add handlers for commands
+	d.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		if h, ok := c.CommandHandlers[i.ApplicationCommandData().Name]; ok {
+			h(s, i)
+		}
+	})
 
 	err = d.Open()
+
+	// Register commands
+	registeredCommands := make([]*discordgo.ApplicationCommand, len(c.Commands))
+	for i, v := range c.Commands {
+		cmd, err := d.ApplicationCommandCreate(d.State.User.ID, "818211523109191700", v)
+		if err != nil {
+			log.Panicf("Cannot create '%v' command: %v", v.Name, err)
+		}
+		registeredCommands[i] = cmd
+	}
+
+	d.Identify.Intents = discordgo.IntentsGuildMessages
 
 	if err != nil {
 		fmt.Println("error opening connection, ", err)

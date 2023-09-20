@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"math/rand"
+	"strconv"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -12,42 +13,44 @@ var (
 	// Array containing all the bots command details
 	Commands = []*discordgo.ApplicationCommand{
 		{
-			Name:        "basic-command",
-			Description: "Basic command",
-		},
-		{
 			Name:        "roll",
 			Description: "returns a random number from the chosen dice",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
-					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Type:        discordgo.ApplicationCommandOptionInteger,
 					Name:        "d4",
 					Description: "4 sided dice",
+					MaxValue:    10,
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Type:        discordgo.ApplicationCommandOptionInteger,
 					Name:        "d6",
 					Description: "6 sided dice",
+					MaxValue:    10,
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Type:        discordgo.ApplicationCommandOptionInteger,
 					Name:        "d8",
 					Description: "8 sided dice",
+					MaxValue:    10,
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Type:        discordgo.ApplicationCommandOptionInteger,
 					Name:        "d10",
 					Description: "10 sided dice",
+					MaxValue:    10,
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Type:        discordgo.ApplicationCommandOptionInteger,
 					Name:        "d12",
 					Description: "12 sided dice",
+					MaxValue:    10,
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Type:        discordgo.ApplicationCommandOptionInteger,
 					Name:        "d20",
 					Description: "20 sided dice",
+					MaxValue:    10,
 				},
 			},
 		},
@@ -55,17 +58,11 @@ var (
 
 	// Command handlers executing the commands logic
 	CommandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-		"basic-command": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Content: "Hey there! Congratulations, you just executed your first slash command",
-				},
-			})
-		},
+		// Dice roll command - Allows the user to chose D4 - D20 and chose how many of each should be rolled
 		"roll": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			options := i.ApplicationCommandData().Options
 			optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options))
+			delimiter := "---------------"
 			total := 0
 			result := []string{}
 
@@ -73,39 +70,19 @@ var (
 				optionMap[opt.Name] = opt
 			}
 
-			for k := range optionMap {
-				switch k {
-				case "d4":
-					val := rand.Intn(3) + 1
-					total += val
-					result = append(result, fmt.Sprintf("D4  Result: %v", val))
-				case "d6":
-					val := rand.Intn(5) + 1
-					total += val
-					result = append(result, fmt.Sprintf("D6  Result: %v", val))
-				case "d8":
-					val := rand.Intn(7) + 1
-					total += val
-					result = append(result, fmt.Sprintf("D8  Result: %v", val))
-				case "d10":
-					val := rand.Intn(9) + 1
-					total += val
-					result = append(result, fmt.Sprintf("D10 Result: %v", val))
-				case "d12":
-					val := rand.Intn(11) + 1
-					total += val
-					result = append(result, fmt.Sprintf("D12 Result: %v", val))
-				case "d20":
-					val := rand.Intn(19) + 1
-					total += val
-					result = append(result, fmt.Sprintf("D20 Result: %v", val))
-				default:
-					result = append(result, "No dice was rolled.")
+			for k, v := range optionMap {
+				if key, err := strconv.Atoi(k[1:]); err == nil {
+					for i := 0; i < int(v.IntValue()); i++ {
+						val := rand.Intn(key-1) + 1
+						total += val
+						result = append(result, fmt.Sprintf("D%v  Result: %v", key, val))
+					}
+					result = append(result, delimiter)
 				}
 			}
 
-			if result[0] != "No dice was rolled." {
-				result = append(result, fmt.Sprintf("---------------\n**Total: %v**", total))
+			if len(result) != 0 {
+				result = append(result, fmt.Sprintf("Total: %v", total))
 			}
 
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{

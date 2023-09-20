@@ -2,9 +2,11 @@ package commands
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -54,6 +56,36 @@ var (
 				},
 			},
 		},
+		{
+			Name:        "event",
+			Description: "creates a event for the channel",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "name",
+					Description: "the events name",
+					Required:    true,
+				},
+				{
+					Type:         discordgo.ApplicationCommandOptionChannel,
+					Name:         "channel",
+					Description:  "the events voice channel",
+					ChannelTypes: []discordgo.ChannelType{2},
+					Required:     true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "time",
+					Description: "starting time of the event from now in minutes",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "description",
+					Description: "the events description (optional)",
+				},
+			},
+		},
 	}
 
 	// Command handlers executing the commands logic
@@ -91,6 +123,42 @@ var (
 					Content: strings.Join(result, "\n"),
 				},
 			})
+		},
+		"event": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			options := i.ApplicationCommandData().Options
+			optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options))
+			for _, opt := range options {
+				optionMap[opt.Name] = opt
+			}
+			t := optionMap["time"].IntValue()
+			startingTime := time.Now().Add(time.Duration(t) * time.Minute)
+			endingTime := startingTime.Add(720 * time.Minute)
+
+			_, err := s.GuildScheduledEventCreate(i.GuildID, &discordgo.GuildScheduledEventParams{
+				Name:               optionMap["name"].StringValue(),
+				Description:        optionMap["description"].StringValue(),
+				ScheduledStartTime: &startingTime,
+				ScheduledEndTime:   &endingTime,
+				EntityType:         discordgo.GuildScheduledEventEntityTypeVoice,
+				ChannelID:          optionMap["channel"].ChannelValue(s).ID,
+				PrivacyLevel:       discordgo.GuildScheduledEventPrivacyLevelGuildOnly,
+			})
+			if err != nil {
+				log.Printf("Error creating scheduled event: %v", err)
+
+			}
+
+			// Response
+			err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "Event created!",
+					Flags:   discordgo.MessageFlagsEphemeral,
+				},
+			})
+			if err != nil {
+				fmt.Printf("Failed to respond to event creation: %v", err)
+			}
 		},
 	}
 )

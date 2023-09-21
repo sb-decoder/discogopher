@@ -11,6 +11,11 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+const (
+	THUMBS_UP   string = "👍"
+	THUMBS_DOWN string = "👎"
+)
+
 var (
 	// Array containing all the bots command details
 	Commands = []*discordgo.ApplicationCommand{
@@ -104,6 +109,7 @@ var (
 	CommandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 		// Dice roll command - Allows the user to chose D4 - D20 and chose how many of each should be rolled
 		"roll": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			// Get options
 			options := i.ApplicationCommandData().Options
 			optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options))
 			delimiter := "---------------"
@@ -114,6 +120,7 @@ var (
 				optionMap[opt.Name] = opt
 			}
 
+			// Generate results
 			for k, v := range optionMap {
 				if key, err := strconv.Atoi(k[1:]); err == nil {
 					for i := 0; i < int(v.IntValue()); i++ {
@@ -129,6 +136,7 @@ var (
 				result = append(result, fmt.Sprintf("Total: %v", total))
 			}
 
+			// Respond
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: 4,
 				Data: &discordgo.InteractionResponseData{
@@ -163,7 +171,7 @@ var (
 
 			}
 
-			// Response
+			// Respond
 			err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: 4,
 				Data: &discordgo.InteractionResponseData{
@@ -176,9 +184,11 @@ var (
 			}
 		},
 		"poll": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			// Get options
 			options := i.ApplicationCommandData().Options
 			topic := options[0].StringValue()
 
+			// Respond
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: 4,
 				Data: &discordgo.InteractionResponseData{
@@ -186,12 +196,13 @@ var (
 				},
 			})
 
+			// React
 			message, err := s.InteractionResponse(i.Interaction)
 			if err != nil {
 				fmt.Println(err)
 			}
-			s.MessageReactionAdd(message.ChannelID, message.ID, "\xF0\x9F\x91\x8D")
-			s.MessageReactionAdd(message.ChannelID, message.ID, "\xF0\x9F\x91\x8E")
+			s.MessageReactionAdd(message.ChannelID, message.ID, THUMBS_UP)
+			s.MessageReactionAdd(message.ChannelID, message.ID, THUMBS_DOWN)
 		},
 	}
 )

@@ -1,6 +1,4 @@
-<div style="width: 100%; display: flex; justify-content: center; align-items: center;">
-    <img src="pictures/discogopher.png" width="50%">
-</div>
+<img src="pictures/discogopher.png" width="50%">
 
 # meet discogopher
 a multi purpose discord bot written in Golang

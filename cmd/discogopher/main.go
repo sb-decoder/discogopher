@@ -50,9 +50,6 @@ func main() {
 		registeredCommands[i] = cmd
 	}
 
-	// TODO - See if I need this line
-	d.Identify.Intents = discordgo.IntentsGuildMessages
-
 	// Properly shut down the bot once exit signal is received
 	fmt.Println("Bot is now running. Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)

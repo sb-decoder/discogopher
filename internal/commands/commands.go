@@ -82,7 +82,19 @@ var (
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "description",
-					Description: "the events description (optional)",
+					Description: "the events description",
+				},
+			},
+		},
+		{
+			Name:        "poll",
+			Description: "creates a yes/no poll",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "topic",
+					Description: "the polls topic",
+					Required:    true,
 				},
 			},
 		},
@@ -118,18 +130,21 @@ var (
 			}
 
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Type: 4,
 				Data: &discordgo.InteractionResponseData{
 					Content: strings.Join(result, "\n"),
 				},
 			})
 		},
 		"event": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			// Get command option values
 			options := i.ApplicationCommandData().Options
 			optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options))
 			for _, opt := range options {
 				optionMap[opt.Name] = opt
 			}
+
+			// Create server event
 			t := optionMap["time"].IntValue()
 			startingTime := time.Now().Add(time.Duration(t) * time.Minute)
 			endingTime := startingTime.Add(720 * time.Minute)
@@ -150,7 +165,7 @@ var (
 
 			// Response
 			err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Type: 4,
 				Data: &discordgo.InteractionResponseData{
 					Content: "Event created!",
 					Flags:   discordgo.MessageFlagsEphemeral,
@@ -159,6 +174,24 @@ var (
 			if err != nil {
 				fmt.Printf("Failed to respond to event creation: %v", err)
 			}
+		},
+		"poll": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			options := i.ApplicationCommandData().Options
+			topic := options[0].StringValue()
+
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: 4,
+				Data: &discordgo.InteractionResponseData{
+					Content: fmt.Sprintf("%v", topic),
+				},
+			})
+
+			message, err := s.InteractionResponse(i.Interaction)
+			if err != nil {
+				fmt.Println(err)
+			}
+			s.MessageReactionAdd(message.ChannelID, message.ID, "\xF0\x9F\x91\x8D")
+			s.MessageReactionAdd(message.ChannelID, message.ID, "\xF0\x9F\x91\x8E")
 		},
 	}
 )

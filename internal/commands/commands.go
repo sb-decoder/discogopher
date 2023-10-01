@@ -103,18 +103,6 @@ var (
 				},
 			},
 		},
-		{
-			Name:        "wiki",
-			Description: "looks up a given topic on wikipedia",
-			Options: []*discordgo.ApplicationCommandOption{
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "topic",
-					Description: "the topic to search for",
-					Required:    true,
-				},
-			},
-		},
 	}
 
 	// Command handlers executing the commands logic
@@ -215,12 +203,6 @@ var (
 			}
 			s.MessageReactionAdd(message.ChannelID, message.ID, THUMBS_UP)
 			s.MessageReactionAdd(message.ChannelID, message.ID, THUMBS_DOWN)
-		},
-		"wiki": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			options := i.ApplicationCommandData().Options
-			topic := options[0].StringValue()
-			fmt.Println(topic)
-
 		},
 	}
 )

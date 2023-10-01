@@ -26,7 +26,7 @@ func main() {
 		log.Fatal("Error while starting discord session.")
 	}
 
-	// Add handlers for commands so the bot knows what to do once a command is requested by the user.
+	// Add handlers for commands so the bot knows what to do once a command is initiated by the user.
 	d.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if h, ok := c.CommandHandlers[i.ApplicationCommandData().Name]; ok {
 			h(s, i)
